@@ -1,0 +1,15 @@
+# Environment files with real secrets
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Build artifacts
+backend/server
+frontend/.next/
+frontend/node_modules/
+
+# OS
+.DS_Store
