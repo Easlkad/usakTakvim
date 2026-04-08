@@ -88,7 +88,7 @@ func (h *RoomHandler) List(c *gin.Context) {
 	userID := c.GetString("user_id")
 	isSuperuser := c.GetBool("is_superuser")
 
-	var rooms []models.Room
+	rooms := []models.Room{}
 	var err error
 
 	if isSuperuser {
@@ -155,7 +155,7 @@ func (h *RoomHandler) Members(c *gin.Context) {
 		return
 	}
 
-	var members []models.User
+	members := []models.User{}
 	err := h.db.Select(&members,
 		`SELECT u.id, u.username, u.is_superuser, u.created_at
 		 FROM users u
