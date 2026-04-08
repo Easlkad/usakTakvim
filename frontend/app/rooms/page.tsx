@@ -69,18 +69,19 @@ export default function RoomsPage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Navbar */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-indigo-600" />
-            <span className="font-bold text-xl text-indigo-600">UsakTakvim</span>
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+            <span className="font-bold text-lg sm:text-xl text-indigo-600">UsakTakvim</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-xs sm:text-sm text-slate-600 hidden sm:block">
               {user.username}
               {user.is_superuser && <Badge variant="secondary" className="ml-2 text-xs">Admin</Badge>}
             </span>
-            <Button variant="ghost" size="sm" onClick={() => { logout(); router.replace("/auth"); }}>
-              <LogOut className="w-4 h-4 mr-1" /> Çıkış
+            <Button variant="ghost" size="sm" onClick={() => { logout(); router.replace("/auth"); }} className="px-2">
+              <LogOut className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Çıkış</span>
             </Button>
           </div>
         </div>
@@ -88,18 +89,20 @@ export default function RoomsPage() {
 
       <main className="max-w-5xl mx-auto px-4 py-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Odalarım</h1>
-            <p className="text-slate-500 mt-1">Takvimlerinize erişmek için bir oda seçin</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Odalarım</h1>
+            <p className="text-slate-500 mt-1 text-sm sm:text-base">Takvimlerinize erişmek için bir oda seçin</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setJoinOpen(true)}>
-              <Key className="w-4 h-4 mr-2" /> Odaya Katıl
+          <div className="flex gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => setJoinOpen(true)} className="px-2 sm:px-4">
+              <Key className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Odaya Katıl</span>
             </Button>
             {user.is_superuser && (
-              <Button onClick={() => { setNewRoom(null); setCreateOpen(true); }}>
-                <Plus className="w-4 h-4 mr-2" /> Oda Oluştur
+              <Button size="sm" onClick={() => { setNewRoom(null); setCreateOpen(true); }} className="px-2 sm:px-4">
+                <Plus className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Oda Oluştur</span>
               </Button>
             )}
           </div>

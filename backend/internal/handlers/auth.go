@@ -80,7 +80,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Username:    body.Username,
 		IsSuperuser: isSuperuser,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30 * 24 * time.Hour)),
 		},
 	})
 	signed, err := token.SignedString([]byte(jwtSecret()))

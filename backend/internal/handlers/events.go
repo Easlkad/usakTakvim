@@ -143,8 +143,8 @@ func (h *EventHandler) Respond(c *gin.Context) {
 		return
 	}
 
-	if body.ResponseType == "alternative" && (body.AltStartTime == nil || body.AltEndTime == nil) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "alt_start_time and alt_end_time required for alternative"})
+	if body.ResponseType == "alternative" && body.Note == "" && (body.AltStartTime == nil || body.AltEndTime == nil) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "alternative requires either a note or alt times"})
 		return
 	}
 

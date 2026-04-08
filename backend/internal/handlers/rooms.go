@@ -128,14 +128,20 @@ func (h *RoomHandler) Get(c *gin.Context) {
 		}
 	}
 
+	userID := c.GetString("user_id")
 	var room models.Room
 	err := h.db.QueryRowx(
-		`SELECT id, name, created_by, created_at FROM rooms WHERE id=$1`,
+		`SELECT id, name, room_key, created_by, created_at FROM rooms WHERE id=$1`,
 		roomID,
 	).StructScan(&room)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "room not found"})
 		return
+	}
+
+	// only expose room key to creator or superuser
+	if room.CreatedBy != userID && !isSuperuser {
+		room.RoomKey = ""
 	}
 
 	c.JSON(http.StatusOK, room)

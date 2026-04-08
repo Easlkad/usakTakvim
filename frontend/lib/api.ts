@@ -14,6 +14,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options.headers,
     },
   });
+
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("auth-storage");
+    window.location.href = "/auth";
+    throw new Error("Oturumunuz sona erdi, lütfen tekrar giriş yapın");
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "request failed" }));
     throw new Error(err.error || "request failed");
