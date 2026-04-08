@@ -1,4 +1,7 @@
 FROM golang:1.25-alpine AS builder
+ENV GOTOOLCHAIN=local
+ENV CGO_ENABLED=0
+ENV GOOS=linux
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
