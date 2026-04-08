@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Key, LogOut, Users } from "lucide-react";
 
 export default function RoomsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, hydrated } = useAuth();
   const router = useRouter();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,12 +31,13 @@ export default function RoomsPage() {
   const [newRoom, setNewRoom] = useState<Room | null>(null);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!user) { router.replace("/auth"); return; }
     api.rooms.list()
       .then(setRooms)
       .catch(() => toast.error("Odalar yüklenemedi"))
       .finally(() => setLoading(false));
-  }, [user, router]);
+  }, [user, hydrated, router]);
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +64,7 @@ export default function RoomsPage() {
     }
   }
 
+  if (!hydrated) return null;
   if (!user) return null;
 
   return (

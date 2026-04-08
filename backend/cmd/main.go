@@ -44,6 +44,9 @@ func main() {
 		auth.POST("/login", authH.Login)
 	}
 
+	// WS is outside auth middleware — it handles its own token validation via query param
+	r.GET("/api/rooms/:id/ws", wsH.Handle)
+
 	api := r.Group("/api", middleware.Auth())
 	{
 		rooms := api.Group("/rooms")
@@ -57,7 +60,6 @@ func main() {
 			rooms.POST("/:id/events", eventH.Create)
 			rooms.POST("/:id/events/:eventId/respond", eventH.Respond)
 			rooms.DELETE("/:id/events/:eventId", eventH.Delete)
-			rooms.GET("/:id/ws", wsH.Handle)
 		}
 	}
 

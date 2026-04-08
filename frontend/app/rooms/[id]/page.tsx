@@ -47,7 +47,7 @@ const messages = {
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: roomId } = use(params);
-  const { user } = useAuth();
+  const { user, hydrated } = useAuth();
   const router = useRouter();
 
   const [room, setRoom] = useState<Room | null>(null);
@@ -69,6 +69,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!user) { router.replace("/auth"); return; }
 
     Promise.all([api.rooms.get(roomId), api.events.list(roomId)])
@@ -105,7 +106,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       }
     };
     return () => ws.close();
-  }, [roomId, user, router]);
+  }, [roomId, user, hydrated, router]);
 
   const calendarEvents = events.map(ev => ({
     id: ev.id,
@@ -202,6 +203,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleString("tr-TR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
+  if (!hydrated) return null;
   if (!user) return null;
 
   const canSeeKey = room?.room_key && (user.is_superuser || room.created_by === user.id);
