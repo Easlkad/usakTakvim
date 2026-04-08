@@ -128,7 +128,6 @@ func (h *RoomHandler) Get(c *gin.Context) {
 		}
 	}
 
-	userID := c.GetString("user_id")
 	var room models.Room
 	err := h.db.QueryRowx(
 		`SELECT id, name, room_key, created_by, created_at FROM rooms WHERE id=$1`,
