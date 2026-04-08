@@ -10,12 +10,13 @@ import (
 
 func Connect() (*sqlx.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		getEnv("DB_HOST", "localhost"),
 		getEnv("DB_PORT", "5432"),
 		getEnv("DB_USER", "postgres"),
 		getEnv("DB_PASSWORD", "postgres"),
 		getEnv("DB_NAME", "usakTakvim"),
+		getEnv("DB_SSLMODE", "disable"),
 	)
 	return sqlx.Connect("postgres", dsn)
 }
