@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { format } from "date-fns";
 import { toast } from "sonner";
-import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import { tr } from "date-fns/locale";
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import { api } from "@/lib/api";
 import { useAuth } from "@/store/auth";
 import type { Event, Response, WSMessage, Room } from "@/types";
@@ -27,33 +24,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { RoomCalendar } from "@/components/room-calendar";
 import { ChatDrawer } from "@/components/chat-drawer";
 import { MembersSheet } from "@/components/members-sheet";
 import { NotificationPanel } from "@/components/notification-panel";
 import type { ChatMessage } from "@/types";
 import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar, ThumbsUp, Users } from "lucide-react";
-
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
-  getDay,
-  locales: { tr },
-});
-
-const messages = {
-  today: "Bugün",
-  previous: "‹",
-  next: "›",
-  month: "Ay",
-  week: "Hafta",
-  day: "Gün",
-  agenda: "Ajanda",
-  date: "Tarih",
-  time: "Saat",
-  event: "Etkinlik",
-  noEventsInRange: "Bu aralıkta etkinlik yok",
-};
 
 export default function RoomPage() {
   const { id: roomId } = useParams<{ id: string }>();
@@ -147,13 +123,6 @@ export default function RoomPage() {
     return () => ws.close();
   }, [roomId, user, hydrated, router]);
 
-  const calendarEvents = useMemo(() => events.map(ev => ({
-    id: ev.id,
-    title: ev.title,
-    start: new Date(ev.start_time),
-    end: new Date(ev.end_time),
-    resource: ev,
-  })), [events]);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -250,18 +219,6 @@ export default function RoomPage() {
   }
 
   const responseCount = (ev: Event, type: string) => ev.responses.filter(r => r.response_type === type).length;
-
-  const eventStyleGetter = useMemo(() => (event: typeof calendarEvents[0]) => {
-    const ev: Event = event.resource;
-    const me = myResponse(ev);
-    const colors: Record<string, string> = {
-      yes: "#10b981",
-      no: "#f43f5e",
-      alternative: "#f59e0b",
-    };
-    const bg = me ? colors[me.response_type] : "#7c3aed";
-    return { style: { backgroundColor: bg, borderColor: bg, color: "white" } };
-  }, [events, user?.id]);
 
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleString("tr-TR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -367,18 +324,12 @@ export default function RoomPage() {
           className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden calendar-container"
           style={{ height: isMobile ? "calc(100vh - 210px)" : "calc(100vh - 190px)" }}
         >
-          <BigCalendar
-            localizer={localizer}
-            events={calendarEvents}
-            culture="tr"
-            messages={messages}
-            eventPropGetter={eventStyleGetter}
-            onSelectEvent={(e) => setSelectedEvent(e.resource)}
-            onSelectSlot={(slot) => { setCreateSlot({ start: slot.start, end: slot.end }); setCreateOpen(true); }}
-            selectable
-            defaultView={isMobile ? "agenda" : "month"}
-            views={isMobile ? ["agenda", "day"] : ["month", "week", "day", "agenda"]}
-            style={{ height: "100%" }}
+          <RoomCalendar
+            events={events}
+            isMobile={isMobile}
+            userId={user?.id}
+            onSelectEvent={setSelectedEvent}
+            onSelectSlot={(slot) => { setCreateSlot(slot); setCreateOpen(true); }}
           />
         </div>
       </main>
