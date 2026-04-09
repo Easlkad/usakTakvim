@@ -4,7 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", weight: ["400", "500", "600", "700", "800"] });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", weight: ["600", "700"] });
 
 export const metadata: Metadata = {
   title: "UsakTakvim",

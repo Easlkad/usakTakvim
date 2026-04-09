@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
@@ -94,6 +94,7 @@ export default function RoomPage() {
 
     const ws = new WebSocket(api.wsUrl(roomId));
     wsRef.current = ws;
+    ws.onerror = () => toast.error("Bağlantı hatası, lütfen sayfayı yenileyin");
     ws.onmessage = (e) => {
       const msg: WSMessage = JSON.parse(e.data);
       if (msg.type === "event_created") {
@@ -146,13 +147,13 @@ export default function RoomPage() {
     return () => ws.close();
   }, [roomId, user, hydrated, router]);
 
-  const calendarEvents = events.map(ev => ({
+  const calendarEvents = useMemo(() => events.map(ev => ({
     id: ev.id,
     title: ev.title,
     start: new Date(ev.start_time),
     end: new Date(ev.end_time),
     resource: ev,
-  }));
+  })), [events]);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -250,7 +251,7 @@ export default function RoomPage() {
 
   const responseCount = (ev: Event, type: string) => ev.responses.filter(r => r.response_type === type).length;
 
-  const eventStyleGetter = (event: typeof calendarEvents[0]) => {
+  const eventStyleGetter = useMemo(() => (event: typeof calendarEvents[0]) => {
     const ev: Event = event.resource;
     const me = myResponse(ev);
     const colors: Record<string, string> = {
@@ -260,7 +261,7 @@ export default function RoomPage() {
     };
     const bg = me ? colors[me.response_type] : "#7c3aed";
     return { style: { backgroundColor: bg, borderColor: bg, color: "white" } };
-  };
+  }, [events, user?.id]);
 
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleString("tr-TR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
