@@ -49,12 +49,12 @@ func (h *AdminHandler) ApproveUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"approved": true})
 }
 
-// RejectUser sets a pending user's status to 'rejected'.
+// RejectUser deletes the pending user record entirely, freeing their username.
 func (h *AdminHandler) RejectUser(c *gin.Context) {
 	userID := c.Param("id")
 
 	result, err := h.db.Exec(
-		`UPDATE users SET status='rejected' WHERE id=$1 AND status='pending'`,
+		`DELETE FROM users WHERE id=$1 AND status='pending'`,
 		userID,
 	)
 	if err != nil {

@@ -25,7 +25,7 @@ func Migrate(database *sqlx.DB) {
 			sql: `
 				ALTER TABLE users
 				ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active'
-				CHECK (status IN ('pending', 'active', 'rejected'));
+				CHECK (status IN ('pending', 'active'));
 			`,
 		},
 		{

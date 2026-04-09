@@ -79,12 +79,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	switch status {
-	case "pending":
+	if status == "pending" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Hesabınız henüz onaylanmadı. Lütfen yönetici onayını bekleyin."})
-		return
-	case "rejected":
-		c.JSON(http.StatusForbidden, gin.H{"error": "Hesabınız reddedildi. Lütfen yönetici ile iletişime geçin."})
 		return
 	}
 
