@@ -45,6 +45,19 @@ export interface Response {
   created_at: string;
 }
 
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string;
+  room_id: string;
+  room_name: string;
+  resource_id?: string;
+  read: boolean;
+  created_at: string;
+}
+
 export interface RoomMember {
   user_id: string;
   username: string;

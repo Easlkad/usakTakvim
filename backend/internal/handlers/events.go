@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -117,6 +118,21 @@ func (h *EventHandler) Create(c *gin.Context) {
 		RoomID:  roomID,
 		Payload: event,
 	})
+
+	// Notify all active room members (except the creator)
+	var memberIDs []struct{ UserID string `db:"user_id"` }
+	h.db.Select(&memberIDs,
+		`SELECT user_id FROM room_members WHERE room_id=$1 AND status='active' AND user_id != $2`,
+		roomID, userID,
+	)
+	notifBody := fmt.Sprintf("%s yeni bir etkinlik oluşturdu", username)
+	for _, m := range memberIDs {
+		h.db.Exec(
+			`INSERT INTO notifications (user_id, type, title, body, room_id, resource_id)
+			 VALUES ($1, 'event_created', $2, $3, $4, $5)`,
+			m.UserID, event.Title, notifBody, roomID, event.ID,
+		)
+	}
 
 	c.JSON(http.StatusCreated, event)
 }

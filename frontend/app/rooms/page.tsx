@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationPanel } from "@/components/notification-panel";
 import { Calendar, Plus, Key, LogOut, ArrowRight, Hash, ShieldCheck } from "lucide-react";
 
 const CARD_GRADIENTS = [
@@ -101,6 +102,7 @@ export default function RoomsPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationPanel />
             <ThemeToggle />
             {user.is_superuser && (
               <Button
