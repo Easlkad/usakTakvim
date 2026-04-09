@@ -39,6 +39,8 @@ func (h *EventHandler) List(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetString("user_id")
+
 	events := []models.Event{}
 	err := h.db.Select(&events,
 		`SELECT e.id, e.room_id, e.created_by, u.username as creator_name,
@@ -58,12 +60,16 @@ func (h *EventHandler) List(c *gin.Context) {
 		responses := []models.Response{}
 		h.db.Select(&responses,
 			`SELECT r.id, r.event_id, r.user_id, u.username,
-			        r.response_type, r.alt_start_time, r.alt_end_time, r.note, r.created_at
+			        r.response_type, r.alt_start_time, r.alt_end_time, r.note, r.created_at,
+			        COUNT(av.user_id)                            AS vote_count,
+			        COALESCE(BOOL_OR(av.user_id = $2), false)   AS my_vote
 			 FROM responses r
 			 JOIN users u ON u.id = r.user_id
+			 LEFT JOIN alternative_votes av ON av.response_id = r.id
 			 WHERE r.event_id = $1
+			 GROUP BY r.id, u.username
 			 ORDER BY r.created_at ASC`,
-			events[i].ID,
+			events[i].ID, userID,
 		)
 		events[i].Responses = responses
 	}
@@ -174,6 +180,72 @@ func (h *EventHandler) Respond(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, response)
+}
+
+// VoteAlternative toggles the current user's support vote on an alternative response.
+func (h *EventHandler) VoteAlternative(c *gin.Context) {
+	responseID := c.Param("responseId")
+	userID := c.GetString("user_id")
+
+	// Verify the response exists, is alternative type, and fetch its room
+	var resp struct {
+		EventID      string `db:"event_id"`
+		ResponseType string `db:"response_type"`
+		OwnerID      string `db:"user_id"`
+	}
+	if err := h.db.QueryRowx(
+		`SELECT event_id, response_type, user_id FROM responses WHERE id=$1`, responseID,
+	).StructScan(&resp); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "response not found"})
+		return
+	}
+	if resp.ResponseType != "alternative" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "voting is only allowed on alternative responses"})
+		return
+	}
+	if resp.OwnerID == userID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot vote on your own alternative"})
+		return
+	}
+
+	var roomID string
+	h.db.QueryRow(`SELECT room_id FROM events WHERE id=$1`, resp.EventID).Scan(&roomID)
+
+	if !h.requireMembership(c, roomID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not a member"})
+		return
+	}
+
+	// Toggle: delete if exists, insert if not
+	var existing int
+	h.db.QueryRow(
+		`SELECT COUNT(*) FROM alternative_votes WHERE response_id=$1 AND user_id=$2`,
+		responseID, userID,
+	).Scan(&existing)
+
+	voted := false
+	if existing > 0 {
+		h.db.Exec(`DELETE FROM alternative_votes WHERE response_id=$1 AND user_id=$2`, responseID, userID)
+	} else {
+		h.db.Exec(`INSERT INTO alternative_votes (response_id, user_id) VALUES ($1, $2)`, responseID, userID)
+		voted = true
+	}
+
+	var count int
+	h.db.QueryRow(`SELECT COUNT(*) FROM alternative_votes WHERE response_id=$1`, responseID).Scan(&count)
+
+	ws.Global.Broadcast(roomID, ws.Message{
+		Type:   "alternative_voted",
+		RoomID: roomID,
+		Payload: gin.H{
+			"response_id": responseID,
+			"vote_count":  count,
+			"voter_id":    userID,
+			"voted":       voted,
+		},
+	})
+
+	c.JSON(http.StatusOK, gin.H{"vote_count": count, "voted": voted})
 }
 
 func (h *EventHandler) Delete(c *gin.Context) {

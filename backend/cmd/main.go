@@ -67,6 +67,7 @@ func main() {
 			rooms.GET("/:id/events", eventH.List)
 			rooms.POST("/:id/events", eventH.Create)
 			rooms.POST("/:id/events/:eventId/respond", eventH.Respond)
+			rooms.POST("/:id/events/:eventId/responses/:responseId/vote", eventH.VoteAlternative)
 			rooms.DELETE("/:id/events/:eventId", eventH.Delete)
 			rooms.GET("/:id/messages", chatH.List)
 		}

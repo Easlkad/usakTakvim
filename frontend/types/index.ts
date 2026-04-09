@@ -40,6 +40,8 @@ export interface Response {
   alt_start_time?: string;
   alt_end_time?: string;
   note: string;
+  vote_count: number;
+  my_vote: boolean;
   created_at: string;
 }
 
@@ -56,4 +58,5 @@ export type WSMessage =
   | { type: "event_created"; room_id: string; payload: Event }
   | { type: "event_deleted"; room_id: string; payload: { event_id: string } }
   | { type: "response_updated"; room_id: string; payload: Response }
-  | { type: "chat_message"; room_id: string; payload: ChatMessage };
+  | { type: "chat_message"; room_id: string; payload: ChatMessage }
+  | { type: "alternative_voted"; room_id: string; payload: { response_id: string; vote_count: number; voter_id: string; voted: boolean } };

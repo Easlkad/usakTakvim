@@ -51,13 +51,15 @@ type ChatMessage struct {
 }
 
 type Response struct {
-	ID           string     `db:"id" json:"id"`
-	EventID      string     `db:"event_id" json:"event_id"`
-	UserID       string     `db:"user_id" json:"user_id"`
-	Username     string     `db:"username" json:"username"`
-	ResponseType string     `db:"response_type" json:"response_type"`
+	ID           string     `db:"id"             json:"id"`
+	EventID      string     `db:"event_id"       json:"event_id"`
+	UserID       string     `db:"user_id"        json:"user_id"`
+	Username     string     `db:"username"       json:"username"`
+	ResponseType string     `db:"response_type"  json:"response_type"`
 	AltStartTime *time.Time `db:"alt_start_time" json:"alt_start_time,omitempty"`
-	AltEndTime   *time.Time `db:"alt_end_time" json:"alt_end_time,omitempty"`
-	Note         string     `db:"note" json:"note"`
-	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
+	AltEndTime   *time.Time `db:"alt_end_time"   json:"alt_end_time,omitempty"`
+	Note         string     `db:"note"           json:"note"`
+	VoteCount    int        `db:"vote_count"     json:"vote_count"`
+	MyVote       bool       `db:"my_vote"        json:"my_vote"`
+	CreatedAt    time.Time  `db:"created_at"     json:"created_at"`
 }

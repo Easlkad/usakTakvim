@@ -62,6 +62,8 @@ export const api = {
       }),
     delete: (roomId: string, eventId: string) =>
       request(`/api/rooms/${roomId}/events/${eventId}`, { method: "DELETE" }),
+    vote: (roomId: string, eventId: string, responseId: string) =>
+      request(`/api/rooms/${roomId}/events/${eventId}/responses/${responseId}/vote`, { method: "POST" }),
   },
   chat: {
     messages: (roomId: string) =>

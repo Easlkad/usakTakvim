@@ -23,7 +23,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ChatDrawer } from "@/components/chat-drawer";
 import type { ChatMessage } from "@/types";
-import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar } from "lucide-react";
+import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar, ThumbsUp } from "lucide-react";
 
 const localizer = dateFnsLocalizer({
   format,
@@ -93,6 +93,16 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       } else if (msg.type === "chat_message") {
         setChatMessages(prev => [...prev, msg.payload]);
         if (!chatOpen) setUnreadCount(prev => prev + 1);
+      } else if (msg.type === "alternative_voted") {
+        const { response_id, vote_count, voter_id, voted } = msg.payload;
+        const applyVote = (responses: import("@/types").Response[]) =>
+          responses.map(r => r.id !== response_id ? r : {
+            ...r,
+            vote_count,
+            my_vote: voter_id === user?.id ? voted : r.my_vote,
+          });
+        setEvents(prev => prev.map(ev => ({ ...ev, responses: applyVote(ev.responses) })));
+        setSelectedEvent(prev => prev ? { ...prev, responses: applyVote(prev.responses) } : prev);
       } else if (msg.type === "response_updated") {
         const r = msg.payload;
         setEvents(prev => prev.map(ev => {
@@ -189,6 +199,15 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       await api.events.delete(roomId, eventId);
       setSelectedEvent(null);
       toast.success("Etkinlik silindi");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Hata");
+    }
+  }
+
+  async function handleVote(responseId: string) {
+    if (!selectedEvent) return;
+    try {
+      await api.events.vote(roomId, selectedEvent.id, responseId);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Hata");
     }
@@ -449,6 +468,20 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                             )}
                             {r.note && <p className="text-xs text-muted-foreground mt-0.5 italic">"{r.note}"</p>}
                           </div>
+                          {r.response_type === "alternative" && r.user_id !== user.id && (
+                            <button
+                              onClick={() => handleVote(r.id)}
+                              title={r.my_vote ? "Desteği geri al" : "Bu öneriyi destekle"}
+                              className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                                r.my_vote
+                                  ? "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300"
+                                  : "bg-muted text-muted-foreground hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600"
+                              }`}
+                            >
+                              <ThumbsUp className="w-3 h-3" />
+                              {r.vote_count > 0 && <span>{r.vote_count}</span>}
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>

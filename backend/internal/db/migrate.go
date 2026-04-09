@@ -38,6 +38,17 @@ func Migrate(database *sqlx.DB) {
 			`,
 		},
 		{
+			name: "create_alternative_votes_table",
+			sql: `
+				CREATE TABLE IF NOT EXISTS alternative_votes (
+					response_id UUID REFERENCES responses(id) ON DELETE CASCADE,
+					user_id     UUID REFERENCES users(id)    ON DELETE CASCADE,
+					created_at  TIMESTAMPTZ DEFAULT NOW(),
+					PRIMARY KEY (response_id, user_id)
+				);
+			`,
+		},
+		{
 			name: "create_messages_table",
 			sql: `
 				CREATE TABLE IF NOT EXISTS messages (
