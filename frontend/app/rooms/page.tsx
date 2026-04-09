@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Calendar, Plus, Key, LogOut, ArrowRight, Hash } from "lucide-react";
+import { Calendar, Plus, Key, LogOut, ArrowRight, Hash, ShieldCheck } from "lucide-react";
 
 const CARD_GRADIENTS = [
   "from-violet-500 to-purple-600",
@@ -98,6 +98,18 @@ export default function RoomsPage() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            {user.is_superuser && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/admin")}
+                className="rounded-xl h-8 gap-1.5 px-2.5 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40"
+                title="Yönetici Paneli"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-semibold">Admin</span>
+              </Button>
+            )}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{user.username}</span>
               {user.is_superuser && (

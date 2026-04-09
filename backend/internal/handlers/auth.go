@@ -38,7 +38,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	var id string
 	err = h.db.QueryRow(
-		`INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id`,
+		`INSERT INTO users (username, password_hash, status) VALUES ($1, $2, 'pending') RETURNING id`,
 		body.Username, string(hash),
 	).Scan(&id)
 	if err != nil {
@@ -46,7 +46,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": id, "username": body.Username})
+	c.JSON(http.StatusCreated, gin.H{
+		"id":       id,
+		"username": body.Username,
+		"message":  "Kaydınız alındı. Yönetici onayından sonra giriş yapabilirsiniz.",
+	})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -59,19 +63,28 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	var id, hash string
+	var id, hash, status string
 	var isSuperuser bool
 	err := h.db.QueryRow(
-		`SELECT id, password_hash, is_superuser FROM users WHERE username=$1`,
+		`SELECT id, password_hash, is_superuser, status FROM users WHERE username=$1`,
 		body.Username,
-	).Scan(&id, &hash, &isSuperuser)
+	).Scan(&id, &hash, &isSuperuser, &status)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Kullanıcı adı veya şifre hatalı"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(body.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Kullanıcı adı veya şifre hatalı"})
+		return
+	}
+
+	switch status {
+	case "pending":
+		c.JSON(http.StatusForbidden, gin.H{"error": "Hesabınız henüz onaylanmadı. Lütfen yönetici onayını bekleyin."})
+		return
+	case "rejected":
+		c.JSON(http.StatusForbidden, gin.H{"error": "Hesabınız reddedildi. Lütfen yönetici ile iletişime geçin."})
 		return
 	}
 

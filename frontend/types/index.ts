@@ -4,6 +4,12 @@ export interface User {
   is_superuser: boolean;
 }
 
+export interface PendingUser {
+  id: string;
+  username: string;
+  created_at: string;
+}
+
 export interface Room {
   id: string;
   name: string;

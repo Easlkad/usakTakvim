@@ -63,6 +63,11 @@ export const api = {
     delete: (roomId: string, eventId: string) =>
       request(`/api/rooms/${roomId}/events/${eventId}`, { method: "DELETE" }),
   },
+  admin: {
+    pendingUsers: () => request<import("@/types").PendingUser[]>("/api/admin/users/pending"),
+    approve: (id: string) => request(`/api/admin/users/${id}/approve`, { method: "POST" }),
+    reject: (id: string) => request(`/api/admin/users/${id}/reject`, { method: "POST" }),
+  },
   wsUrl: (roomId: string) =>
     `${BASE.replace(/^http/, "ws")}/api/rooms/${roomId}/ws?token=${token()}`,
 };

@@ -20,6 +20,8 @@ func main() {
 	}
 	defer database.Close()
 
+	db.Migrate(database)
+
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
@@ -33,10 +35,11 @@ func main() {
 		c.Next()
 	})
 
-	authH := handlers.NewAuthHandler(database)
-	roomH := handlers.NewRoomHandler(database)
+	authH  := handlers.NewAuthHandler(database)
+	roomH  := handlers.NewRoomHandler(database)
 	eventH := handlers.NewEventHandler(database)
-	wsH := handlers.NewWSHandler(database)
+	wsH    := handlers.NewWSHandler(database)
+	adminH := handlers.NewAdminHandler(database)
 
 	auth := r.Group("/auth")
 	{
@@ -60,6 +63,13 @@ func main() {
 			rooms.POST("/:id/events", eventH.Create)
 			rooms.POST("/:id/events/:eventId/respond", eventH.Respond)
 			rooms.DELETE("/:id/events/:eventId", eventH.Delete)
+		}
+
+		admin := api.Group("/admin", middleware.SuperuserOnly())
+		{
+			admin.GET("/users/pending", adminH.ListPendingUsers)
+			admin.POST("/users/:id/approve", adminH.ApproveUser)
+			admin.POST("/users/:id/reject", adminH.RejectUser)
 		}
 	}
 

@@ -7,7 +7,15 @@ type User struct {
 	Username     string    `db:"username" json:"username"`
 	PasswordHash string    `db:"password_hash" json:"-"`
 	IsSuperuser  bool      `db:"is_superuser" json:"is_superuser"`
+	Status       string    `db:"status" json:"status"`
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+}
+
+// PendingUser is returned by admin endpoints — no password hash exposed.
+type PendingUser struct {
+	ID        string    `db:"id" json:"id"`
+	Username  string    `db:"username" json:"username"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
 
 type Room struct {
@@ -19,15 +27,17 @@ type Room struct {
 }
 
 type Event struct {
-	ID          string    `db:"id" json:"id"`
-	RoomID      string    `db:"room_id" json:"room_id"`
-	CreatedBy   string    `db:"created_by" json:"created_by"`
-	CreatorName string    `db:"creator_name" json:"creator_name"`
-	Title       string    `db:"title" json:"title"`
-	Description string    `db:"description" json:"description"`
-	StartTime   time.Time `db:"start_time" json:"start_time"`
-	EndTime     time.Time `db:"end_time" json:"end_time"`
-	CreatedAt   time.Time `db:"created_at" json:"created_at"`
+	ID          string     `db:"id" json:"id"`
+	RoomID      string     `db:"room_id" json:"room_id"`
+	CreatedBy   string     `db:"created_by" json:"created_by"`
+	CreatorName string     `db:"creator_name" json:"creator_name"`
+	Title       string     `db:"title" json:"title"`
+	Description string     `db:"description" json:"description"`
+	StartTime   time.Time  `db:"start_time" json:"start_time"`
+	EndTime     time.Time  `db:"end_time" json:"end_time"`
+	// Status is prepared for future approval flow; currently always 'active'.
+	Status      string     `db:"status" json:"status"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
 	Responses   []Response `db:"-" json:"responses"`
 }
 
