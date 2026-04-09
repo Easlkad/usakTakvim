@@ -24,7 +24,19 @@ interface Props {
 
 export function ChatDrawer({ open, onOpenChange, messages, currentUser, onSend, unreadCount, isMobile }: Props) {
   const [input, setInput] = useState("");
+  const [sheetHeight, setSheetHeight] = useState("75dvh");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Track visual viewport so the sheet shrinks correctly when the keyboard opens on mobile
+  useEffect(() => {
+    if (!isMobile) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setSheetHeight(`${Math.round(vv.height * 0.88)}px`);
+    update();
+    vv.addEventListener("resize", update);
+    return () => vv.removeEventListener("resize", update);
+  }, [isMobile]);
 
   // Scroll to bottom when new messages arrive or drawer opens
   useEffect(() => {
@@ -69,7 +81,7 @@ export function ChatDrawer({ open, onOpenChange, messages, currentUser, onSend, 
             "flex flex-col gap-0 p-0 border-border",
             isMobile ? "rounded-t-2xl" : "w-[360px] sm:max-w-[360px]",
           ].join(" ")}
-          style={isMobile ? { height: "75vh" } : undefined}
+          style={isMobile ? { height: sheetHeight } : undefined}
         >
           {/* Header */}
           <SheetHeader className="px-5 py-4 border-b border-border shrink-0">

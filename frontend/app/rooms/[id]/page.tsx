@@ -20,9 +20,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ChatDrawer } from "@/components/chat-drawer";
 import { MembersSheet } from "@/components/members-sheet";
+import { NotificationPanel } from "@/components/notification-panel";
 import type { ChatMessage } from "@/types";
 import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar, ThumbsUp, Users } from "lucide-react";
 
@@ -66,6 +73,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [noNoteOpen, setNoNoteOpen] = useState(false);
+  const [noNote, setNoNote] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -166,11 +175,14 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  async function respond(type: "yes" | "no") {
+  async function respond(type: "yes" | "no", note = "") {
     if (!selectedEvent) return;
     setSubmitting(true);
     try {
-      await api.events.respond(roomId, selectedEvent.id, { response_type: type });
+      await api.events.respond(roomId, selectedEvent.id, {
+        response_type: type,
+        ...(note ? { note } : {}),
+      });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Hata");
     } finally {
@@ -292,6 +304,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            <NotificationPanel />
             <ThemeToggle />
             <Button
               variant="ghost"
@@ -369,14 +382,14 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         </div>
       </main>
 
-      {/* Event Detail Dialog */}
-      <Dialog open={!!selectedEvent} onOpenChange={v => !v && setSelectedEvent(null)}>
-        <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto rounded-2xl">
+      {/* Event Detail Sheet */}
+      <Sheet open={!!selectedEvent} onOpenChange={v => !v && setSelectedEvent(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-[560px] flex flex-col gap-0 p-0">
           {selectedEvent && (
             <>
-              <DialogHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <DialogTitle className="text-lg sm:text-xl leading-tight pr-2">{selectedEvent.title}</DialogTitle>
+              <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
+                <div className="flex items-start justify-between gap-3">
+                  <SheetTitle className="text-xl leading-tight">{selectedEvent.title}</SheetTitle>
                   {(user.is_superuser || selectedEvent.created_by === user.id) && (
                     <Button
                       variant="ghost"
@@ -388,9 +401,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                     </Button>
                   )}
                 </div>
-              </DialogHeader>
+              </SheetHeader>
 
-              <div className="space-y-5">
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
                 {/* Event info */}
                 <div className="bg-muted/60 rounded-xl p-4 space-y-2.5 text-sm">
                   <div className="flex items-start gap-2.5 text-foreground/80">
@@ -429,7 +442,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                           ? "bg-rose-500 hover:bg-rose-600 text-white shadow-md shadow-rose-500/25 border-0"
                           : "border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 bg-transparent"
                       }`}
-                      onClick={() => respond("no")}
+                      onClick={() => { setNoNote(myResponse(selectedEvent)?.note ?? ""); setNoNoteOpen(true); }}
                       disabled={submitting}
                     >
                       <X className="w-3.5 h-3.5" /> Katılamıyorum
@@ -469,16 +482,16 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                       Henüz yanıt yok
                     </p>
                   ) : (
-                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    <div className="space-y-2">
                       {selectedEvent.responses.map(r => (
-                        <div key={r.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                        <div key={r.id} className="flex items-start gap-3 p-3.5 rounded-xl bg-muted/50 border border-border/50">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
                             r.response_type === "yes" ? "bg-emerald-100 dark:bg-emerald-900" :
                             r.response_type === "no" ? "bg-rose-100 dark:bg-rose-900" : "bg-amber-100 dark:bg-amber-900"
                           }`}>
-                            {r.response_type === "yes" && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
-                            {r.response_type === "no" && <X className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />}
-                            {r.response_type === "alternative" && <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
+                            {r.response_type === "yes" && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+                            {r.response_type === "no" && <X className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
+                            {r.response_type === "alternative" && <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold">{r.username}</p>
@@ -487,7 +500,13 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                                 {fmtDate(r.alt_start_time)} – {fmtDate(r.alt_end_time!)}
                               </p>
                             )}
-                            {r.note && <p className="text-xs text-muted-foreground mt-0.5 italic">"{r.note}"</p>}
+                            {r.note && (
+                              <p className={`text-xs mt-1 italic ${
+                                r.response_type === "no"
+                                  ? "text-rose-600 dark:text-rose-400"
+                                  : "text-muted-foreground"
+                              }`}>"{r.note}"</p>
+                            )}
                           </div>
                           {r.response_type === "alternative" && r.user_id !== user.id && (
                             <button
@@ -511,6 +530,50 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
               </div>
             </>
           )}
+        </SheetContent>
+      </Sheet>
+
+      {/* "No" explanation dialog */}
+      <Dialog open={noNoteOpen} onOpenChange={v => { setNoNoteOpen(v); if (!v) setNoNote(""); }}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg">Katılamıyorum</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-1">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                Açıklama <span className="text-muted-foreground font-normal">(isteğe bağlı)</span>
+              </Label>
+              <Input
+                value={noNote}
+                onChange={e => setNoNote(e.target.value)}
+                placeholder="Neden katılamıyorsunuz?"
+                className="h-11 rounded-xl"
+                maxLength={300}
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 h-11 rounded-xl"
+                onClick={() => { setNoNoteOpen(false); setNoNote(""); }}
+              >
+                İptal
+              </Button>
+              <Button
+                className="flex-1 h-11 rounded-xl bg-rose-500 hover:bg-rose-600 text-white border-0 font-semibold"
+                disabled={submitting}
+                onClick={async () => {
+                  await respond("no", noNote);
+                  setNoNoteOpen(false);
+                  setNoNote("");
+                }}
+              >
+                Gönder
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

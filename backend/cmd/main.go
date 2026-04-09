@@ -42,6 +42,7 @@ func main() {
 	wsH    := handlers.NewWSHandler(database)
 	adminH := handlers.NewAdminHandler(database)
 	chatH  := handlers.NewChatHandler(database)
+	notifH := handlers.NewNotificationHandler(database)
 
 	auth := r.Group("/auth")
 	{
@@ -74,6 +75,9 @@ func main() {
 			rooms.DELETE("/:id/events/:eventId", eventH.Delete)
 			rooms.GET("/:id/messages", chatH.List)
 		}
+
+		api.GET("/notifications", notifH.List)
+		api.POST("/notifications/read-all", notifH.MarkAllRead)
 
 		admin := api.Group("/admin", middleware.SuperuserOnly())
 		{

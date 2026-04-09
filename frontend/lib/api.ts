@@ -74,6 +74,10 @@ export const api = {
     messages: (roomId: string) =>
       request<import("@/types").ChatMessage[]>(`/api/rooms/${roomId}/messages`),
   },
+  notifications: {
+    list: () => request<import("@/types").Notification[]>("/api/notifications"),
+    markAllRead: () => request("/api/notifications/read-all", { method: "POST" }),
+  },
   admin: {
     pendingUsers: () => request<import("@/types").PendingUser[]>("/api/admin/users/pending"),
     approve: (id: string) => request(`/api/admin/users/${id}/approve`, { method: "POST" }),

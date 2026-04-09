@@ -58,6 +58,19 @@ type ChatMessage struct {
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
 
+type Notification struct {
+	ID         string    `db:"id"          json:"id"`
+	UserID     string    `db:"user_id"     json:"user_id"`
+	Type       string    `db:"type"        json:"type"`
+	Title      string    `db:"title"       json:"title"`
+	Body       string    `db:"body"        json:"body"`
+	RoomID     string    `db:"room_id"     json:"room_id"`
+	RoomName   string    `db:"room_name"   json:"room_name"`
+	ResourceID *string   `db:"resource_id" json:"resource_id,omitempty"`
+	Read       bool      `db:"read"        json:"read"`
+	CreatedAt  time.Time `db:"created_at"  json:"created_at"`
+}
+
 type Response struct {
 	ID           string     `db:"id"             json:"id"`
 	EventID      string     `db:"event_id"       json:"event_id"`
