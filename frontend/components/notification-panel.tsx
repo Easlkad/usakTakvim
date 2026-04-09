@@ -26,11 +26,18 @@ export function NotificationPanel() {
     } catch {}
   }, []);
 
-  // Load on mount and refresh every 60 seconds
+  // Load on mount, then poll every 60s only while the tab is visible
   useEffect(() => {
     load();
-    const id = setInterval(load, 60_000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval> | null = null;
+
+    const start = () => { id = setInterval(load, 60_000); };
+    const stop  = () => { if (id !== null) { clearInterval(id); id = null; } };
+
+    start();
+    const onVisibility = () => (document.hidden ? stop() : (load(), start()));
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { stop(); document.removeEventListener("visibilitychange", onVisibility); };
   }, [load]);
 
   async function handleOpen() {

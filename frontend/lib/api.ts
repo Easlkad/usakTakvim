@@ -1,3 +1,8 @@
+import type {
+  Room, Event, ChatMessage, Notification,
+  PendingUser, RoomMember,
+} from "@/types";
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 function token() {
@@ -40,23 +45,23 @@ export const api = {
       ),
   },
   rooms: {
-    list: () => request<import("@/types").Room[]>("/api/rooms"),
+    list: () => request<Room[]>("/api/rooms"),
     create: (name: string) =>
-      request<import("@/types").Room>("/api/rooms", { method: "POST", body: JSON.stringify({ name }) }),
+      request<Room>("/api/rooms", { method: "POST", body: JSON.stringify({ name }) }),
     join: (room_key: string) =>
-      request<import("@/types").Room>("/api/rooms/join", { method: "POST", body: JSON.stringify({ room_key }) }),
-    get: (id: string) => request<import("@/types").Room>(`/api/rooms/${id}`),
-    members: (id: string) => request<import("@/types").RoomMember[]>(`/api/rooms/${id}/members`),
-    pendingMembers: (id: string) => request<import("@/types").RoomMember[]>(`/api/rooms/${id}/members/pending`),
+      request<Room>("/api/rooms/join", { method: "POST", body: JSON.stringify({ room_key }) }),
+    get: (id: string) => request<Room>(`/api/rooms/${id}`),
+    members: (id: string) => request<RoomMember[]>(`/api/rooms/${id}/members`),
+    pendingMembers: (id: string) => request<RoomMember[]>(`/api/rooms/${id}/members/pending`),
     approveMember: (id: string, userId: string) =>
       request(`/api/rooms/${id}/members/${userId}/approve`, { method: "POST" }),
     removeMember: (id: string, userId: string) =>
       request(`/api/rooms/${id}/members/${userId}`, { method: "DELETE" }),
   },
   events: {
-    list: (roomId: string) => request<import("@/types").Event[]>(`/api/rooms/${roomId}/events`),
+    list: (roomId: string) => request<Event[]>(`/api/rooms/${roomId}/events`),
     create: (roomId: string, data: { title: string; description: string; start_time: string; end_time: string }) =>
-      request<import("@/types").Event>(`/api/rooms/${roomId}/events`, {
+      request<Event>(`/api/rooms/${roomId}/events`, {
         method: "POST",
         body: JSON.stringify(data),
       }),
@@ -71,15 +76,14 @@ export const api = {
       request(`/api/rooms/${roomId}/events/${eventId}/responses/${responseId}/vote`, { method: "POST" }),
   },
   chat: {
-    messages: (roomId: string) =>
-      request<import("@/types").ChatMessage[]>(`/api/rooms/${roomId}/messages`),
+    messages: (roomId: string) => request<ChatMessage[]>(`/api/rooms/${roomId}/messages`),
   },
   notifications: {
-    list: () => request<import("@/types").Notification[]>("/api/notifications"),
+    list: () => request<Notification[]>("/api/notifications"),
     markAllRead: () => request("/api/notifications/read-all", { method: "POST" }),
   },
   admin: {
-    pendingUsers: () => request<import("@/types").PendingUser[]>("/api/admin/users/pending"),
+    pendingUsers: () => request<PendingUser[]>("/api/admin/users/pending"),
     approve: (id: string) => request(`/api/admin/users/${id}/approve`, { method: "POST" }),
     reject: (id: string) => request(`/api/admin/users/${id}/reject`, { method: "POST" }),
   },
