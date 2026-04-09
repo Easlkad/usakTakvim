@@ -41,6 +41,7 @@ func main() {
 	eventH := handlers.NewEventHandler(database)
 	wsH    := handlers.NewWSHandler(database)
 	adminH := handlers.NewAdminHandler(database)
+	chatH  := handlers.NewChatHandler(database)
 
 	auth := r.Group("/auth")
 	{
@@ -67,6 +68,7 @@ func main() {
 			rooms.POST("/:id/events", eventH.Create)
 			rooms.POST("/:id/events/:eventId/respond", eventH.Respond)
 			rooms.DELETE("/:id/events/:eventId", eventH.Delete)
+			rooms.GET("/:id/messages", chatH.List)
 		}
 
 		admin := api.Group("/admin", middleware.SuperuserOnly())

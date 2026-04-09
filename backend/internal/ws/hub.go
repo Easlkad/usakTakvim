@@ -14,15 +14,16 @@ type Message struct {
 }
 
 type Client struct {
-	conn   *websocket.Conn
-	roomID string
-	userID string
-	send   chan []byte
+	conn     *websocket.Conn
+	roomID   string
+	userID   string
+	username string
+	send     chan []byte
 }
 
 type Hub struct {
-	mu      sync.RWMutex
-	rooms   map[string]map[*Client]bool
+	mu    sync.RWMutex
+	rooms map[string]map[*Client]bool
 }
 
 var Global = &Hub{
@@ -65,12 +66,13 @@ func (h *Hub) Broadcast(roomID string, msg Message) {
 	}
 }
 
-func (h *Hub) NewClient(conn *websocket.Conn, roomID, userID string) *Client {
+func (h *Hub) NewClient(conn *websocket.Conn, roomID, userID, username string) *Client {
 	return &Client{
-		conn:   conn,
-		roomID: roomID,
-		userID: userID,
-		send:   make(chan []byte, 256),
+		conn:     conn,
+		roomID:   roomID,
+		userID:   userID,
+		username: username,
+		send:     make(chan []byte, 256),
 	}
 }
 
@@ -83,14 +85,20 @@ func (c *Client) WritePump() {
 	}
 }
 
-func (c *Client) ReadPump(hub *Hub) {
+// ReadPump reads messages from the client connection.
+// onMessage is called for each message received; pass nil to discard all.
+func (c *Client) ReadPump(hub *Hub, onMessage func(data []byte)) {
 	defer func() {
 		hub.Unregister(c)
 		c.conn.Close()
 	}()
 	for {
-		if _, _, err := c.conn.ReadMessage(); err != nil {
+		_, data, err := c.conn.ReadMessage()
+		if err != nil {
 			return
+		}
+		if onMessage != nil {
+			onMessage(data)
 		}
 	}
 }

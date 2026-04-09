@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"usakTakvim/internal/middleware"
+	"usakTakvim/internal/models"
 	"usakTakvim/internal/ws"
 )
 
@@ -48,6 +51,7 @@ func (h *WSHandler) Handle(c *gin.Context) {
 	}
 
 	userID := claims.UserID
+	username := claims.Username
 	isSuperuser := claims.IsSuperuser
 
 	if !isSuperuser {
@@ -67,9 +71,41 @@ func (h *WSHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	client := ws.Global.NewClient(conn, roomID, userID)
+	client := ws.Global.NewClient(conn, roomID, userID, username)
 	ws.Global.Register(client)
 
 	go client.WritePump()
-	go client.ReadPump(ws.Global)
+	go client.ReadPump(ws.Global, func(data []byte) {
+		var incoming struct {
+			Type    string `json:"type"`
+			Content string `json:"content"`
+		}
+		if err := json.Unmarshal(data, &incoming); err != nil {
+			return
+		}
+		if incoming.Type != "chat_message" {
+			return
+		}
+		content := strings.TrimSpace(incoming.Content)
+		if content == "" || len(content) > 1000 {
+			return
+		}
+
+		var msg models.ChatMessage
+		err := h.db.QueryRowx(
+			`INSERT INTO messages (room_id, user_id, username, content)
+			 VALUES ($1, $2, $3, $4)
+			 RETURNING id, room_id, user_id, username, content, created_at`,
+			roomID, userID, username, content,
+		).StructScan(&msg)
+		if err != nil {
+			return
+		}
+
+		ws.Global.Broadcast(roomID, ws.Message{
+			Type:    "chat_message",
+			RoomID:  roomID,
+			Payload: msg,
+		})
+	})
 }

@@ -37,6 +37,21 @@ func Migrate(database *sqlx.DB) {
 				CHECK (status IN ('pending', 'active'));
 			`,
 		},
+		{
+			name: "create_messages_table",
+			sql: `
+				CREATE TABLE IF NOT EXISTS messages (
+					id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+					room_id    UUID REFERENCES rooms(id) ON DELETE CASCADE,
+					user_id    UUID REFERENCES users(id) ON DELETE CASCADE,
+					username   VARCHAR(50) NOT NULL,
+					content    TEXT NOT NULL,
+					created_at TIMESTAMPTZ DEFAULT NOW()
+				);
+				CREATE INDEX IF NOT EXISTS idx_messages_room_created
+					ON messages (room_id, created_at DESC);
+			`,
+		},
 	}
 
 	for _, m := range migrations {

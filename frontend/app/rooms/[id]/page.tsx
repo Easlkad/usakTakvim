@@ -21,6 +21,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ChatDrawer } from "@/components/chat-drawer";
+import type { ChatMessage } from "@/types";
 import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar } from "lucide-react";
 
 const localizer = dateFnsLocalizer({
@@ -59,6 +61,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [submitting, setSubmitting] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -72,8 +77,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     if (!hydrated) return;
     if (!user) { router.replace("/auth"); return; }
 
-    Promise.all([api.rooms.get(roomId), api.events.list(roomId)])
-      .then(([r, evs]) => { setRoom(r); setEvents(evs); })
+    Promise.all([api.rooms.get(roomId), api.events.list(roomId), api.chat.messages(roomId)])
+      .then(([r, evs, msgs]) => { setRoom(r); setEvents(evs); setChatMessages(msgs); })
       .catch(() => toast.error("Oda yüklenemedi"));
 
     const ws = new WebSocket(api.wsUrl(roomId));
@@ -85,6 +90,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       } else if (msg.type === "event_deleted") {
         setEvents(prev => prev.filter(ev => ev.id !== msg.payload.event_id));
         setSelectedEvent(prev => prev?.id === msg.payload.event_id ? null : prev);
+      } else if (msg.type === "chat_message") {
+        setChatMessages(prev => [...prev, msg.payload]);
+        if (!chatOpen) setUnreadCount(prev => prev + 1);
       } else if (msg.type === "response_updated") {
         const r = msg.payload;
         setEvents(prev => prev.map(ev => {
@@ -184,6 +192,14 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Hata");
     }
+  }
+
+  function sendChatMessage(content: string) {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      toast.error("Bağlantı yok, lütfen sayfayı yenileyin");
+      return;
+    }
+    wsRef.current.send(JSON.stringify({ type: "chat_message", content }));
   }
 
   function myResponse(ev: Event): Response | undefined {
@@ -491,6 +507,17 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Chat */}
+      <ChatDrawer
+        open={chatOpen}
+        onOpenChange={(v) => { setChatOpen(v); if (v) setUnreadCount(0); }}
+        messages={chatMessages}
+        currentUser={user}
+        onSend={sendChatMessage}
+        unreadCount={unreadCount}
+        isMobile={isMobile}
+      />
 
       {/* Alternative Proposal Dialog */}
       <Dialog open={altOpen} onOpenChange={setAltOpen}>

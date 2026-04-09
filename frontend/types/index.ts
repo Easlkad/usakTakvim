@@ -43,7 +43,17 @@ export interface Response {
   created_at: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  room_id: string;
+  user_id: string;
+  username: string;
+  content: string;
+  created_at: string;
+}
+
 export type WSMessage =
   | { type: "event_created"; room_id: string; payload: Event }
   | { type: "event_deleted"; room_id: string; payload: { event_id: string } }
-  | { type: "response_updated"; room_id: string; payload: Response };
+  | { type: "response_updated"; room_id: string; payload: Response }
+  | { type: "chat_message"; room_id: string; payload: ChatMessage };

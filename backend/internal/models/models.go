@@ -41,6 +41,15 @@ type Event struct {
 	Responses   []Response `db:"-" json:"responses"`
 }
 
+type ChatMessage struct {
+	ID        string    `db:"id"         json:"id"`
+	RoomID    string    `db:"room_id"    json:"room_id"`
+	UserID    string    `db:"user_id"    json:"user_id"`
+	Username  string    `db:"username"   json:"username"`
+	Content   string    `db:"content"    json:"content"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+}
+
 type Response struct {
 	ID           string     `db:"id" json:"id"`
 	EventID      string     `db:"event_id" json:"event_id"`

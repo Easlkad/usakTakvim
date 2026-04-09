@@ -63,6 +63,10 @@ export const api = {
     delete: (roomId: string, eventId: string) =>
       request(`/api/rooms/${roomId}/events/${eventId}`, { method: "DELETE" }),
   },
+  chat: {
+    messages: (roomId: string) =>
+      request<import("@/types").ChatMessage[]>(`/api/rooms/${roomId}/messages`),
+  },
   admin: {
     pendingUsers: () => request<import("@/types").PendingUser[]>("/api/admin/users/pending"),
     approve: (id: string) => request(`/api/admin/users/${id}/approve`, { method: "POST" }),
