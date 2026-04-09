@@ -36,7 +36,11 @@ func main() {
 		c.Next()
 	})
 
-	authH  := handlers.NewAuthHandler(database)
+	// Login limiter keys on IP+username so one user's attempts never block another's.
+	// 10 attempts per IP+username combo per 5 minutes.
+	loginLimiter := middleware.NewLimiter(10, 5*time.Minute)
+
+	authH  := handlers.NewAuthHandler(database, loginLimiter)
 	roomH  := handlers.NewRoomHandler(database)
 	eventH := handlers.NewEventHandler(database)
 	wsH    := handlers.NewWSHandler(database)
@@ -45,11 +49,10 @@ func main() {
 
 	auth := r.Group("/auth")
 	{
-		// 5 registration attempts per IP per hour — bcrypt is expensive and
-		// new accounts go to pending anyway, so there's no benefit in spamming.
-		auth.POST("/register", middleware.RateLimit(5, time.Hour), authH.Register)
-		// 10 login attempts per IP per 5 minutes — limits credential stuffing.
-		auth.POST("/login", middleware.RateLimit(10, 5*time.Minute), authH.Login)
+		// 20 registration attempts per IP per hour — accounts go to pending anyway.
+		auth.POST("/register", middleware.RateLimit(20, time.Hour), authH.Register)
+		// Login rate limiting is handled inside the handler, keyed on IP+username.
+		auth.POST("/login", authH.Login)
 	}
 
 	// WS is outside auth middleware — it handles its own token validation via query param
