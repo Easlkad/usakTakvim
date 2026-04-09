@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
@@ -55,8 +55,8 @@ const messages = {
   noEventsInRange: "Bu aralıkta etkinlik yok",
 };
 
-export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: roomId } = use(params);
+export default function RoomPage() {
+  const { id: roomId } = useParams<{ id: string }>();
   const { user, hydrated } = useAuth();
   const router = useRouter();
 
