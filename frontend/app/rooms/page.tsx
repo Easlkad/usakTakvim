@@ -59,11 +59,15 @@ export default function RoomsPage() {
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const room = await api.rooms.join(joinKey.trim());
-      setRooms(prev => prev.find(r => r.id === room.id) ? prev : [room, ...prev]);
+      const result = await api.rooms.join(joinKey.trim()) as { id: string; name: string; pending?: boolean };
       setJoinKey("");
       setJoinOpen(false);
-      toast.success(`"${room.name}" odasına katıldınız`);
+      if (result.pending) {
+        toast.info(`"${result.name}" odasına katılma isteği gönderildi — onay bekleniyor`);
+      } else {
+        setRooms(prev => prev.find(r => r.id === result.id) ? prev : [result as Room, ...prev]);
+        toast.success(`"${result.name}" odasına katıldınız`);
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Geçersiz oda anahtarı");
     }

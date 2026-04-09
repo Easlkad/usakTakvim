@@ -38,6 +38,14 @@ func Migrate(database *sqlx.DB) {
 			`,
 		},
 		{
+			name: "add_room_member_status",
+			sql: `
+				ALTER TABLE room_members
+				ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active'
+				CHECK (status IN ('pending', 'active'));
+			`,
+		},
+		{
 			name: "create_alternative_votes_table",
 			sql: `
 				CREATE TABLE IF NOT EXISTS alternative_votes (

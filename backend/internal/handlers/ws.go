@@ -57,7 +57,7 @@ func (h *WSHandler) Handle(c *gin.Context) {
 	if !isSuperuser {
 		var count int
 		h.db.QueryRow(
-			`SELECT COUNT(*) FROM room_members WHERE user_id=$1 AND room_id=$2`,
+			`SELECT COUNT(*) FROM room_members WHERE user_id=$1 AND room_id=$2 AND status='active'`,
 			userID, roomID,
 		).Scan(&count)
 		if count == 0 {

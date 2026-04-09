@@ -22,8 +22,9 @@ import {
 } from "@/components/ui/dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ChatDrawer } from "@/components/chat-drawer";
+import { MembersSheet } from "@/components/members-sheet";
 import type { ChatMessage } from "@/types";
-import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar, ThumbsUp, Users } from "lucide-react";
 
 const localizer = dateFnsLocalizer({
   format,
@@ -64,6 +65,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [membersOpen, setMembersOpen] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -103,6 +105,15 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
           });
         setEvents(prev => prev.map(ev => ({ ...ev, responses: applyVote(ev.responses) })));
         setSelectedEvent(prev => prev ? { ...prev, responses: applyVote(prev.responses) } : prev);
+      } else if (msg.type === "member_removed") {
+        if (msg.payload.user_id === user?.id) {
+          toast.error("Odadan çıkarıldınız");
+          router.replace("/rooms");
+        }
+      } else if (msg.type === "member_requested") {
+        if (user?.is_superuser || room?.created_by === user?.id) {
+          toast.info(`"${msg.payload.username}" odaya katılmak istiyor`, { duration: 5000 });
+        }
       } else if (msg.type === "response_updated") {
         const r = msg.payload;
         setEvents(prev => prev.map(ev => {
@@ -282,6 +293,16 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
           <div className="flex items-center gap-1.5 shrink-0">
             <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMembersOpen(true)}
+              className="rounded-xl h-8 gap-1.5 px-2 sm:px-2.5 text-muted-foreground hover:text-foreground"
+              title="Üyeler"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline text-xs font-medium">Üyeler</span>
+            </Button>
             <Button
               size="sm"
               onClick={() => { setCreateSlot(null); setCreateOpen(true); }}
@@ -540,6 +561,18 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Members */}
+      {room && (
+        <MembersSheet
+          open={membersOpen}
+          onOpenChange={setMembersOpen}
+          roomId={roomId}
+          currentUser={user}
+          roomOwnerId={room.created_by}
+          isMobile={isMobile}
+        />
+      )}
 
       {/* Chat */}
       <ChatDrawer

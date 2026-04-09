@@ -46,7 +46,12 @@ export const api = {
     join: (room_key: string) =>
       request<import("@/types").Room>("/api/rooms/join", { method: "POST", body: JSON.stringify({ room_key }) }),
     get: (id: string) => request<import("@/types").Room>(`/api/rooms/${id}`),
-    members: (id: string) => request<import("@/types").User[]>(`/api/rooms/${id}/members`),
+    members: (id: string) => request<import("@/types").RoomMember[]>(`/api/rooms/${id}/members`),
+    pendingMembers: (id: string) => request<import("@/types").RoomMember[]>(`/api/rooms/${id}/members/pending`),
+    approveMember: (id: string, userId: string) =>
+      request(`/api/rooms/${id}/members/${userId}/approve`, { method: "POST" }),
+    removeMember: (id: string, userId: string) =>
+      request(`/api/rooms/${id}/members/${userId}`, { method: "DELETE" }),
   },
   events: {
     list: (roomId: string) => request<import("@/types").Event[]>(`/api/rooms/${roomId}/events`),

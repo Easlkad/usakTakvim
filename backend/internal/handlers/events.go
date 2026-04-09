@@ -26,7 +26,7 @@ func (h *EventHandler) requireMembership(c *gin.Context, roomID string) bool {
 	}
 	var count int
 	h.db.QueryRow(
-		`SELECT COUNT(*) FROM room_members WHERE user_id=$1 AND room_id=$2`,
+		`SELECT COUNT(*) FROM room_members WHERE user_id=$1 AND room_id=$2 AND status='active'`,
 		userID, roomID,
 	).Scan(&count)
 	return count > 0

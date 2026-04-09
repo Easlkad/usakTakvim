@@ -11,6 +11,14 @@ type User struct {
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 }
 
+type RoomMember struct {
+	UserID      string    `db:"user_id"     json:"user_id"`
+	Username    string    `db:"username"    json:"username"`
+	IsSuperuser bool      `db:"is_superuser" json:"is_superuser"`
+	Status      string    `db:"status"      json:"status"`
+	JoinedAt    time.Time `db:"joined_at"   json:"joined_at"`
+}
+
 // PendingUser is returned by admin endpoints — no password hash exposed.
 type PendingUser struct {
 	ID        string    `db:"id" json:"id"`
