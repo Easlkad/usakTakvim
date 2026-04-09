@@ -1,19 +1,31 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", weight: ["400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
   title: "UsakTakvim",
-  description: "Shared calendar and event scheduling",
+  description: "Ortak takvim ve etkinlik planlama",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#f8f9fa]">
+    <html lang="tr" className={`${inter.variable} ${outfit.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            const t = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (t === 'dark' || (!t && prefersDark)) {
+              document.documentElement.classList.add('dark');
+            }
+          } catch(e){}
+        `}} />
+      </head>
+      <body className="min-h-full flex flex-col">
         {children}
         <Toaster richColors position="top-right" />
       </body>

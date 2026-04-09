@@ -20,8 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { ArrowLeft, Plus, Check, X, Clock, Trash2, User, Key, Copy, Calendar } from "lucide-react";
 
 const localizer = dateFnsLocalizer({
   format,
@@ -33,8 +33,8 @@ const localizer = dateFnsLocalizer({
 
 const messages = {
   today: "Bugün",
-  previous: "Geri",
-  next: "İleri",
+  previous: "‹",
+  next: "›",
   month: "Ay",
   week: "Hafta",
   day: "Gün",
@@ -195,8 +195,12 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const eventStyleGetter = (event: typeof calendarEvents[0]) => {
     const ev: Event = event.resource;
     const me = myResponse(ev);
-    const colors: Record<string, string> = { yes: "#22c55e", no: "#ef4444", alternative: "#f59e0b" };
-    const bg = me ? colors[me.response_type] : "#4f46e5";
+    const colors: Record<string, string> = {
+      yes: "#10b981",
+      no: "#f43f5e",
+      alternative: "#f59e0b",
+    };
+    const bg = me ? colors[me.response_type] : "#7c3aed";
     return { style: { backgroundColor: bg, borderColor: bg, color: "white" } };
   };
 
@@ -209,44 +213,62 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const canSeeKey = room?.room_key && (user.is_superuser || room.created_by === user.id);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8f9fa]">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Navbar */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/rooms")} className="shrink-0 px-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/rooms")}
+              className="shrink-0 rounded-xl h-8 gap-1 px-2 text-muted-foreground hover:text-foreground"
+            >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline ml-1">Odalar</span>
+              <span className="hidden sm:inline text-sm font-medium">Odalar</span>
             </Button>
-            <Separator orientation="vertical" className="h-5 hidden sm:block" />
-            <span className="font-semibold text-slate-800 truncate text-sm sm:text-base">{room?.name ?? "..."}</span>
-            {canSeeKey && (
-              <button
-                onClick={() => setShowKey(v => !v)}
-                className="shrink-0 flex items-center gap-1 text-xs text-slate-400 hover:text-indigo-600 transition-colors"
-                title="Oda anahtarını göster"
-              >
-                <Key className="w-3.5 h-3.5" />
-              </button>
-            )}
+            <div className="w-px h-5 bg-border hidden sm:block" />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 bg-gradient-to-br from-violet-500 to-purple-600 rounded-md flex items-center justify-center shrink-0">
+                <Calendar className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="font-bold text-sm sm:text-base truncate">{room?.name ?? "..."}</span>
+              {canSeeKey && (
+                <button
+                  onClick={() => setShowKey(v => !v)}
+                  className={`shrink-0 flex items-center gap-1 text-xs transition-colors rounded-md px-1.5 py-0.5 ${showKey ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-primary"}`}
+                  title="Oda anahtarını göster"
+                >
+                  <Key className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
-          <Button size="sm" onClick={() => { setCreateSlot(null); setCreateOpen(true); }} className="shrink-0 text-xs sm:text-sm px-2 sm:px-3">
-            <Plus className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline">Etkinlik Ekle</span>
-          </Button>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <ThemeToggle />
+            <Button
+              size="sm"
+              onClick={() => { setCreateSlot(null); setCreateOpen(true); }}
+              className="rounded-xl gap-1.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-md shadow-violet-500/20 h-8 text-xs sm:text-sm px-2.5 sm:px-3.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline font-semibold">Etkinlik Ekle</span>
+            </Button>
+          </div>
         </div>
 
         {/* Room key bar */}
         {canSeeKey && showKey && (
-          <div className="bg-indigo-50 border-b border-indigo-100 px-4 py-2 flex items-center justify-between gap-3">
+          <div className="bg-primary/8 border-t border-primary/15 px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Key className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-              <span className="text-xs text-indigo-600">Oda anahtarı:</span>
-              <code className="font-mono text-sm text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded">{room?.room_key}</code>
+              <Key className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="text-xs text-primary/80 font-medium">Oda anahtarı:</span>
+              <code className="font-mono text-sm text-primary bg-primary/10 px-2.5 py-0.5 rounded-md font-bold">{room?.room_key}</code>
             </div>
             <button
               onClick={() => { navigator.clipboard.writeText(room?.room_key ?? ""); toast.success("Kopyalandı"); }}
-              className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700"
+              className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium transition-colors"
             >
               <Copy className="w-3.5 h-3.5" /> Kopyala
             </button>
@@ -255,16 +277,26 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       </header>
 
       {/* Legend */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 pt-3 flex flex-wrap gap-2 sm:gap-4 text-xs text-slate-500">
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" /> Yanıtlanmadı</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Katılıyorum</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> Katılamıyorum</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" /> Alternatif önerdim</span>
+      <div className="max-w-7xl mx-auto w-full px-3 sm:px-4 pt-3 pb-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+        {[
+          { color: "bg-violet-500", label: "Yanıtlanmadı" },
+          { color: "bg-emerald-500", label: "Katılıyorum" },
+          { color: "bg-rose-500", label: "Katılamıyorum" },
+          { color: "bg-amber-400", label: "Alternatif önerdim" },
+        ].map(({ color, label }) => (
+          <span key={label} className="flex items-center gap-1.5 bg-card border border-border rounded-full px-2.5 py-1">
+            <span className={`w-2 h-2 rounded-full ${color} inline-block`} />
+            {label}
+          </span>
+        ))}
       </div>
 
       {/* Calendar */}
       <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-4 py-3 w-full">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 sm:p-4 calendar-container" style={{ height: isMobile ? "calc(100vh - 200px)" : "calc(100vh - 180px)" }}>
+        <div
+          className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden calendar-container"
+          style={{ height: isMobile ? "calc(100vh - 210px)" : "calc(100vh - 190px)" }}
+        >
           <BigCalendar
             localizer={localizer}
             events={calendarEvents}
@@ -283,7 +315,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
       {/* Event Detail Dialog */}
       <Dialog open={!!selectedEvent} onOpenChange={v => !v && setSelectedEvent(null)}>
-        <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto rounded-2xl">
           {selectedEvent && (
             <>
               <DialogHeader>
@@ -293,7 +325,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 rounded-xl h-8 w-8 p-0"
                       onClick={() => handleDelete(selectedEvent.id)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -302,86 +334,104 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                 </div>
               </DialogHeader>
 
-              <div className="space-y-4">
-                <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
-                  <div className="flex items-start gap-2 text-slate-600">
-                    <Clock className="w-4 h-4 shrink-0 text-indigo-500 mt-0.5" />
-                    <span>{fmtDate(selectedEvent.start_time)} – {fmtDate(selectedEvent.end_time)}</span>
+              <div className="space-y-5">
+                {/* Event info */}
+                <div className="bg-muted/60 rounded-xl p-4 space-y-2.5 text-sm">
+                  <div className="flex items-start gap-2.5 text-foreground/80">
+                    <Clock className="w-4 h-4 shrink-0 text-primary mt-0.5" />
+                    <span className="leading-relaxed">{fmtDate(selectedEvent.start_time)} – {fmtDate(selectedEvent.end_time)}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <User className="w-4 h-4 shrink-0 text-indigo-500" />
+                  <div className="flex items-center gap-2.5 text-foreground/80">
+                    <User className="w-4 h-4 shrink-0 text-primary" />
                     <span>{selectedEvent.creator_name}</span>
                   </div>
                   {selectedEvent.description && (
-                    <p className="text-slate-700 pt-1">{selectedEvent.description}</p>
+                    <p className="text-foreground/70 pt-0.5 leading-relaxed">{selectedEvent.description}</p>
                   )}
                 </div>
 
                 {/* Response Buttons */}
                 <div>
-                  <p className="text-sm font-medium text-slate-700 mb-2">Yanıtınız:</p>
+                  <p className="text-sm font-semibold mb-3">Yanıtınız:</p>
                   <div className="flex gap-2 flex-wrap">
                     <Button
                       size="sm"
-                      variant={myResponse(selectedEvent)?.response_type === "yes" ? "default" : "outline"}
-                      className={myResponse(selectedEvent)?.response_type === "yes" ? "bg-green-500 hover:bg-green-600 border-green-500" : "border-green-200 text-green-700 hover:bg-green-50"}
+                      className={`rounded-xl gap-1.5 font-semibold transition-all ${
+                        myResponse(selectedEvent)?.response_type === "yes"
+                          ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/25 border-0"
+                          : "border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 bg-transparent"
+                      }`}
                       onClick={() => respond("yes")}
                       disabled={submitting}
                     >
-                      <Check className="w-4 h-4 mr-1" /> Katılıyorum
+                      <Check className="w-3.5 h-3.5" /> Katılıyorum
                     </Button>
                     <Button
                       size="sm"
-                      variant={myResponse(selectedEvent)?.response_type === "no" ? "default" : "outline"}
-                      className={myResponse(selectedEvent)?.response_type === "no" ? "bg-red-500 hover:bg-red-600 border-red-500" : "border-red-200 text-red-700 hover:bg-red-50"}
+                      className={`rounded-xl gap-1.5 font-semibold transition-all ${
+                        myResponse(selectedEvent)?.response_type === "no"
+                          ? "bg-rose-500 hover:bg-rose-600 text-white shadow-md shadow-rose-500/25 border-0"
+                          : "border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 bg-transparent"
+                      }`}
                       onClick={() => respond("no")}
                       disabled={submitting}
                     >
-                      <X className="w-4 h-4 mr-1" /> Katılamıyorum
+                      <X className="w-3.5 h-3.5" /> Katılamıyorum
                     </Button>
                     <Button
                       size="sm"
-                      variant={myResponse(selectedEvent)?.response_type === "alternative" ? "default" : "outline"}
-                      className={myResponse(selectedEvent)?.response_type === "alternative" ? "bg-amber-500 hover:bg-amber-600 border-amber-500 text-white" : "border-amber-200 text-amber-700 hover:bg-amber-50"}
+                      className={`rounded-xl gap-1.5 font-semibold transition-all ${
+                        myResponse(selectedEvent)?.response_type === "alternative"
+                          ? "bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/25 border-0"
+                          : "border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 bg-transparent"
+                      }`}
                       onClick={() => setAltOpen(true)}
                       disabled={submitting}
                     >
-                      <Clock className="w-4 h-4 mr-1" /> Öneri
+                      <Clock className="w-3.5 h-3.5" /> Öneri
                     </Button>
                   </div>
                 </div>
 
-                {/* Response List */}
+                {/* Response summary badges */}
                 <div>
                   <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <span className="text-sm font-medium text-slate-700">Yanıtlar</span>
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{responseCount(selectedEvent, "yes")} evet</Badge>
-                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{responseCount(selectedEvent, "no")} hayır</Badge>
-                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">{responseCount(selectedEvent, "alternative")} öneri</Badge>
+                    <p className="text-sm font-semibold">Yanıtlar</p>
+                    <Badge className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-0 hover:bg-emerald-100 rounded-full px-2.5">
+                      {responseCount(selectedEvent, "yes")} evet
+                    </Badge>
+                    <Badge className="bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border-0 hover:bg-rose-100 rounded-full px-2.5">
+                      {responseCount(selectedEvent, "no")} hayır
+                    </Badge>
+                    <Badge className="bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-0 hover:bg-amber-100 rounded-full px-2.5">
+                      {responseCount(selectedEvent, "alternative")} öneri
+                    </Badge>
                   </div>
 
                   {selectedEvent.responses.length === 0 ? (
-                    <p className="text-sm text-slate-400 text-center py-4">Henüz yanıt yok</p>
+                    <p className="text-sm text-muted-foreground text-center py-5 bg-muted/40 rounded-xl">
+                      Henüz yanıt yok
+                    </p>
                   ) : (
                     <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                       {selectedEvent.responses.map(r => (
-                        <div key={r.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-slate-50">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                            r.response_type === "yes" ? "bg-green-100" :
-                            r.response_type === "no" ? "bg-red-100" : "bg-amber-100"
+                        <div key={r.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                            r.response_type === "yes" ? "bg-emerald-100 dark:bg-emerald-900" :
+                            r.response_type === "no" ? "bg-rose-100 dark:bg-rose-900" : "bg-amber-100 dark:bg-amber-900"
                           }`}>
-                            {r.response_type === "yes" && <Check className="w-3.5 h-3.5 text-green-600" />}
-                            {r.response_type === "no" && <X className="w-3.5 h-3.5 text-red-600" />}
-                            {r.response_type === "alternative" && <Clock className="w-3.5 h-3.5 text-amber-600" />}
+                            {r.response_type === "yes" && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+                            {r.response_type === "no" && <X className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />}
+                            {r.response_type === "alternative" && <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-800">{r.username}</p>
+                            <p className="text-sm font-semibold">{r.username}</p>
                             {r.response_type === "alternative" && r.alt_start_time && (
-                              <p className="text-xs text-amber-700 mt-0.5">
+                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 font-medium">
                                 {fmtDate(r.alt_start_time)} – {fmtDate(r.alt_end_time!)}
                               </p>
                             )}
-                            {r.note && <p className="text-xs text-slate-500 mt-0.5 italic">"{r.note}"</p>}
+                            {r.note && <p className="text-xs text-muted-foreground mt-0.5 italic">"{r.note}"</p>}
                           </div>
                         </div>
                       ))}
@@ -396,71 +446,81 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
       {/* Create Event Dialog */}
       <Dialog open={createOpen} onOpenChange={v => { setCreateOpen(v); if (!v) setCreateSlot(null); }}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Yeni Etkinlik</DialogTitle>
+            <DialogTitle className="text-xl">Yeni Etkinlik</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4 mt-2">
-            <div className="space-y-1.5">
-              <Label>Başlık</Label>
-              <Input name="title" required placeholder="Etkinlik adı" />
+          <form onSubmit={handleCreate} className="space-y-4 mt-1">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Başlık</Label>
+              <Input name="title" required placeholder="Etkinlik adı" className="h-11 rounded-xl" />
             </div>
-            <div className="space-y-1.5">
-              <Label>Açıklama (isteğe bağlı)</Label>
-              <Input name="description" placeholder="Detaylar..." />
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Açıklama <span className="text-muted-foreground font-normal">(isteğe bağlı)</span></Label>
+              <Input name="description" placeholder="Detaylar..." className="h-11 rounded-xl" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Başlangıç</Label>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Başlangıç</Label>
                 <Input
                   name="start_time"
                   type="datetime-local"
                   required
                   defaultValue={createSlot ? format(createSlot.start, "yyyy-MM-dd'T'HH:mm") : ""}
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label>Bitiş</Label>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Bitiş</Label>
                 <Input
                   name="end_time"
                   type="datetime-local"
                   required
                   defaultValue={createSlot ? format(createSlot.end, "yyyy-MM-dd'T'HH:mm") : ""}
+                  className="h-11 rounded-xl"
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button
+              type="submit"
+              className="w-full h-11 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 font-semibold shadow-md shadow-violet-500/25"
+              disabled={submitting}
+            >
               {submitting ? "Oluşturuluyor..." : "Etkinlik Oluştur"}
             </Button>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Alternative/Proposal Dialog */}
+      {/* Alternative Proposal Dialog */}
       <Dialog open={altOpen} onOpenChange={setAltOpen}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Öneri Gönder</DialogTitle>
+            <DialogTitle className="text-xl">Öneri Gönder</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleAlternative} className="space-y-4 mt-2">
-            <div className="space-y-1.5">
-              <Label>Notunuz / Alternatif öneriniz</Label>
-              <Input name="note" placeholder="Örn: Farklı bir aktivite önerim var, bowling oynayalım..." />
+          <form onSubmit={handleAlternative} className="space-y-4 mt-1">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Notunuz / Alternatif öneriniz</Label>
+              <Input name="note" placeholder="Örn: Farklı bir aktivite önerim var..." className="h-11 rounded-xl" />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-500 text-xs">Alternatif zaman önerisi (isteğe bağlı)</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-muted-foreground">Alternatif zaman <span className="font-normal">(isteğe bağlı)</span></Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Başlangıç</Label>
-                  <Input name="alt_start" type="datetime-local" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Başlangıç</Label>
+                  <Input name="alt_start" type="datetime-local" className="h-10 rounded-xl text-sm" />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">Bitiş</Label>
-                  <Input name="alt_end" type="datetime-local" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Bitiş</Label>
+                  <Input name="alt_end" type="datetime-local" className="h-10 rounded-xl text-sm" />
                 </div>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button
+              type="submit"
+              className="w-full h-11 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 font-semibold shadow-md shadow-amber-500/25"
+              disabled={submitting}
+            >
               {submitting ? "Gönderiliyor..." : "Öneri Gönder"}
             </Button>
           </form>
