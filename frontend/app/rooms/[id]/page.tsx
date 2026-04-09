@@ -70,11 +70,13 @@ export default function RoomPage() {
 
     const ws = new WebSocket(api.wsUrl(roomId));
     wsRef.current = ws;
-    ws.onerror = () => toast.error("Bağlantı hatası, lütfen sayfayı yenileyin");
+    ws.onerror = () => console.warn("WS error");
     ws.onmessage = (e) => {
       const msg: WSMessage = JSON.parse(e.data);
       if (msg.type === "event_created") {
-        setEvents(prev => [...prev, msg.payload]);
+        if (msg.payload?.id && msg.payload?.title) {
+          setEvents(prev => [...prev, msg.payload]);
+        }
       } else if (msg.type === "event_deleted") {
         setEvents(prev => prev.filter(ev => ev.id !== msg.payload.event_id));
         setSelectedEvent(prev => prev?.id === msg.payload.event_id ? null : prev);

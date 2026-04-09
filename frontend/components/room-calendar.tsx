@@ -46,7 +46,7 @@ interface Props {
 }
 
 export function RoomCalendar({ events, isMobile, userId, onSelectEvent, onSelectSlot }: Props) {
-  const calendarEvents: CalEvent[] = useMemo(() => events.map(ev => ({
+  const calendarEvents: CalEvent[] = useMemo(() => events.filter(ev => ev?.id && ev?.title && ev?.start_time && ev?.end_time).map(ev => ({
     id: ev.id,
     title: ev.title,
     start: new Date(ev.start_time),
