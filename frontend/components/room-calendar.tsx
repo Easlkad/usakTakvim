@@ -56,7 +56,7 @@ export function RoomCalendar({ events, isMobile, userId, onSelectEvent, onSelect
 
   const eventStyleGetter = useMemo(() => (event: CalEvent) => {
     const ev: Event = event.resource;
-    const me: Response | undefined = ev.responses.find(r => r.user_id === userId);
+    const me: Response | undefined = ev?.responses?.find(r => r.user_id === userId);
     const colors: Record<string, string> = {
       yes: "#10b981",
       no: "#f43f5e",
@@ -68,6 +68,7 @@ export function RoomCalendar({ events, isMobile, userId, onSelectEvent, onSelect
 
   return (
     <Calendar
+      key={isMobile ? "mobile" : "desktop"}
       localizer={localizer}
       events={calendarEvents}
       culture="tr"
