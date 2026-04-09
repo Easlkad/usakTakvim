@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -43,8 +44,11 @@ func main() {
 
 	auth := r.Group("/auth")
 	{
-		auth.POST("/register", authH.Register)
-		auth.POST("/login", authH.Login)
+		// 5 registration attempts per IP per hour — bcrypt is expensive and
+		// new accounts go to pending anyway, so there's no benefit in spamming.
+		auth.POST("/register", middleware.RateLimit(5, time.Hour), authH.Register)
+		// 10 login attempts per IP per 5 minutes — limits credential stuffing.
+		auth.POST("/login", middleware.RateLimit(10, 5*time.Minute), authH.Login)
 	}
 
 	// WS is outside auth middleware — it handles its own token validation via query param
