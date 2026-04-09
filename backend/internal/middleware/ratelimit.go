@@ -13,15 +13,16 @@ type windowEntry struct {
 	windowStart time.Time
 }
 
-type ipRateLimiter struct {
+// IPRateLimiter is exported so handlers can hold a reference and call Allow directly.
+type IPRateLimiter struct {
 	mu     sync.Mutex
 	store  map[string]*windowEntry
 	max    int
 	window time.Duration
 }
 
-func newIPRateLimiter(max int, window time.Duration) *ipRateLimiter {
-	rl := &ipRateLimiter{
+func newIPRateLimiter(max int, window time.Duration) *IPRateLimiter {
+	rl := &IPRateLimiter{
 		store:  make(map[string]*windowEntry),
 		max:    max,
 		window: window,
@@ -31,7 +32,7 @@ func newIPRateLimiter(max int, window time.Duration) *ipRateLimiter {
 }
 
 // cleanup removes stale entries every 10 minutes to prevent unbounded memory growth.
-func (rl *ipRateLimiter) cleanup() {
+func (rl *IPRateLimiter) cleanup() {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 	for range ticker.C {
@@ -46,7 +47,7 @@ func (rl *ipRateLimiter) cleanup() {
 	}
 }
 
-func (rl *ipRateLimiter) allow(ip string) bool {
+func (rl *IPRateLimiter) allow(ip string) bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 
@@ -76,4 +77,14 @@ func RateLimit(max int, window time.Duration) gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+// NewLimiter creates a standalone rate limiter whose Allow method can be called
+// from inside a handler with any key (e.g. "ip:username" for login).
+func NewLimiter(max int, window time.Duration) *IPRateLimiter {
+	return newIPRateLimiter(max, window)
+}
+
+func (rl *IPRateLimiter) Allow(key string) bool {
+	return rl.allow(key)
 }

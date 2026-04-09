@@ -13,11 +13,12 @@ import (
 )
 
 type AuthHandler struct {
-	db *sqlx.DB
+	db           *sqlx.DB
+	loginLimiter *middleware.IPRateLimiter
 }
 
-func NewAuthHandler(db *sqlx.DB) *AuthHandler {
-	return &AuthHandler{db: db}
+func NewAuthHandler(db *sqlx.DB, loginLimiter *middleware.IPRateLimiter) *AuthHandler {
+	return &AuthHandler{db: db, loginLimiter: loginLimiter}
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -60,6 +61,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Rate limit keyed on IP+username — one user's attempts never block another's.
+	if !h.loginLimiter.Allow(c.ClientIP() + ":" + body.Username) {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Çok fazla giriş denemesi. Lütfen daha sonra tekrar deneyin."})
 		return
 	}
 
